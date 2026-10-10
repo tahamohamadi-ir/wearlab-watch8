@@ -29,6 +29,7 @@ class SamsungTrackerAdapter(
     private val ppgTypes: Set<PpgType>?,
     override val channels: List<String>,
     private val plotIndex: Int = 0,
+    override val silenceTimeoutSec: Int? = null,
     private val extract: (DataPoint) -> List<Row>,
 ) : SensorAdapter {
 
@@ -79,7 +80,7 @@ class SamsungTrackerAdapter(
         fun ppg(c: Context) = SamsungTrackerAdapter(
             c, SensorType.PPG, HealthTrackerType.PPG_CONTINUOUS,
             setOf(PpgType.GREEN, PpgType.IR, PpgType.RED),
-            listOf("green", "green_status", "ir", "ir_status", "red", "red_status"), plotIndex = 2,
+            listOf("green", "green_status", "ir", "ir_status", "red", "red_status"), plotIndex = 2, silenceTimeoutSec = 10,
         ) {
             one(
                 d(it.getValue(ValueKey.PpgSet.PPG_GREEN)), d(it.getValue(ValueKey.PpgSet.GREEN_STATUS)),
@@ -90,7 +91,7 @@ class SamsungTrackerAdapter(
         }
 
         fun eda(c: Context) = SamsungTrackerAdapter(
-            c, SensorType.EDA, HealthTrackerType.EDA_CONTINUOUS, null, listOf("skin_conductance_uS", "status"),
+            c, SensorType.EDA, HealthTrackerType.EDA_CONTINUOUS, null, listOf("skin_conductance_uS", "status"), silenceTimeoutSec = 15,
         ) {
             val st = it.getValue(ValueKey.EdaSet.STATUS)
             one(d(it.getValue(ValueKey.EdaSet.SKIN_CONDUCTANCE)), d(st), q = st)
@@ -103,7 +104,7 @@ class SamsungTrackerAdapter(
          */
         fun hrIbi(c: Context) = SamsungTrackerAdapter(
             c, SensorType.HR_IBI, HealthTrackerType.HEART_RATE_CONTINUOUS, null,
-            listOf("hr", "hr_status", "ibi_ms", "ibi_status", "ibi_index", "ibi_n"),
+            listOf("hr", "hr_status", "ibi_ms", "ibi_status", "ibi_index", "ibi_n"), silenceTimeoutSec = 15,
         ) {
             val hr = d(it.getValue(ValueKey.HeartRateSet.HEART_RATE))
             val hrSt = it.getValue(ValueKey.HeartRateSet.HEART_RATE_STATUS)

@@ -31,6 +31,9 @@ dependencies {
     implementation(libs.wear.compose.foundation)
     implementation(libs.wear.compose.navigation)
     implementation(libs.activity.compose)
+    implementation(project(":common"))
+    implementation(libs.play.wearable)
+    implementation(libs.coroutines.play)
     implementation(libs.coroutines.android)
     testImplementation(libs.junit)
 }

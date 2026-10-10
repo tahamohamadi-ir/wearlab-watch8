@@ -89,6 +89,8 @@ class SessionManager(private val context: Context, private val store: SessionSto
         val stats = StreamStats()
         val dropped = AtomicLong()
         val enqueued = AtomicLong()
+        val restarts = AtomicLong()
+        @Volatile var lastRx = 0L
         val queue = Channel<Item>(8192)
         @Volatile var error: String? = null
     }
@@ -135,6 +137,7 @@ class SessionManager(private val context: Context, private val store: SessionSto
                     put("mode", if (cfg.continuous) "continuous" else "periodic")
                     put("total_min", cfg.totalMin); put("interval_min", cfg.intervalMin)
                     put("window_sec", cfg.effectiveWindowSec); put("planned_windows", cfg.windowCount)
+                    put("keep_screen_on", cfg.keepScreenOn)
                     put("sensors", JSONArray(cfg.sensors.sorted()))
                 })
                 put("protocol_metadata", JSONObject(p.metadata as Map<*, *>))
@@ -165,7 +168,7 @@ class SessionManager(private val context: Context, private val store: SessionSto
                         put("first_utc_ns", s.writer.firstUtcNs.toString()); put("last_utc_ns", s.writer.lastUtcNs.toString())
                         put("sha256", if (final) s.writer.sha256 ?: JSONObject.NULL else JSONObject.NULL)
                         put("observed_rate_hz", snap.observedRateHz); put("gaps", snap.gaps)
-                        put("max_dt_ms", snap.maxDtMs); put("overflow_dropped", s.dropped.get())
+                        put("max_dt_ms", snap.maxDtMs); put("overflow_dropped", s.dropped.get()); put("tracker_restarts", s.restarts.get())
                         put("error", s.error ?: JSONObject.NULL)
                     })
                 })
@@ -234,20 +237,44 @@ class SessionManager(private val context: Context, private val store: SessionSto
                     val wStart = Timebase.monotonicNs()
                     val wEnd = minOf(if (cfg.continuous) startMono + totalNs else wStart + windowNs, startMono + totalNs)
                     event("window_start", "index=$k scheduled_offset_s=${scheduled / 1_000_000_000L} late_ms=${(wStart - startMono - scheduled) / 1_000_000L}")
+                    InspectorService.screen(cfg.keepScreenOn)
                     val before = streams.associate { it.type to it.enqueued.get() }
                     val collectors = streams.map { s ->
                         launch {
                             event("sensor_start", s.type.name)
+                            var restarts = 0
                             try {
-                                s.adapter.samples(SensorConfig(cfg.rateHz)).collect { x ->
-                                    if (s.queue.trySend(Item(k, x)).isSuccess) s.enqueued.incrementAndGet()
-                                    else if (s.dropped.getAndIncrement() == 0L) event("buffer_overflow", s.type.name)
+                                // Watchdog: the Samsung trackers can stall silently (screen off / sensor service pause).
+                                while (true) {
+                                    s.lastRx = Timebase.monotonicNs()
+                                    val job = launch {
+                                        try {
+                                            s.adapter.samples(SensorConfig(cfg.rateHz)).collect { x ->
+                                                s.lastRx = Timebase.monotonicNs()
+                                                if (s.queue.trySend(Item(k, x)).isSuccess) s.enqueued.incrementAndGet()
+                                                else if (s.dropped.getAndIncrement() == 0L) event("buffer_overflow", s.type.name)
+                                            }
+                                        } catch (e: CancellationException) {
+                                            throw e
+                                        } catch (e: Throwable) {
+                                            s.error = e.message ?: e.toString()
+                                            errors.put("${s.type} (window $k): ${s.error}"); event("sensor_error", "${s.type}: ${s.error}")
+                                        }
+                                    }
+                                    val limitNs = (s.adapter.silenceTimeoutSec ?: 0) * 1_000_000_000L
+                                    while (job.isActive) {
+                                        delay(1000)
+                                        if (limitNs > 0 && Timebase.monotonicNs() - s.lastRx > limitNs) {
+                                            event("tracker_silent", "${s.type} no data for ${(Timebase.monotonicNs() - s.lastRx) / 1_000_000_000L}s")
+                                            job.cancelAndJoin()
+                                        }
+                                    }
+                                    // Reached only when the collector ended by itself (error / stall): retry a few times per window.
+                                    if (limitNs == 0L || ++restarts > 500) break
+                                    s.restarts.incrementAndGet()
+                                    event("tracker_restart", "${s.type} restart #$restarts")
+                                    delay(2000)
                                 }
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: Throwable) {
-                                s.error = e.message ?: e.toString()
-                                errors.put("${s.type} (window $k): ${s.error}"); event("sensor_error", "${s.type}: ${s.error}")
                             } finally { event("sensor_stop", s.type.name) }
                         }
                     }
@@ -271,6 +298,7 @@ class SessionManager(private val context: Context, private val store: SessionSto
                     streams.filter { st -> st.enqueued.get() == (before[st.type] ?: 0) }.forEach { st ->
                         errors.put("${st.type}: no samples in window $k${st.error?.let { e -> " ($e)" } ?: ""}")
                     }
+                    InspectorService.screen(false)
                     event("window_stop", "index=$k $counts")
                     windowsDone++
                     k++

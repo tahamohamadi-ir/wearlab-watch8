@@ -6,7 +6,10 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 
-data class SessionSummary(val id: String, val status: String, val samples: Long, val bytes: Long, val startUtc: String?)
+data class SessionSummary(
+    val id: String, val status: String, val samples: Long, val bytes: Long, val startUtc: String?,
+    val transfer: String = "PENDING",
+)
 
 /** Layout: files/sessions/<session_id>/{manifest.json, metadata.json, <sensor>.csv, events.jsonl}. */
 class SessionStore(context: Context) {
@@ -27,6 +30,7 @@ class SessionStore(context: Context) {
             rateHz = j.getDouble("rate_hz").toFloat(),
             metadata = meta?.keys()?.asSequence()?.associateWith { meta.getString(it) } ?: emptyMap(),
             intervalMin = j.optInt("interval_min", 0), windowSec = j.optInt("window_sec", 0),
+            keepScreenOn = j.optBoolean("keep_screen_on", false),
         )
     }
 
@@ -50,7 +54,10 @@ class SessionStore(context: Context) {
             val streams = m?.optJSONObject("streams")
             var n = 0L; var b = 0L
             streams?.keys()?.forEach { k -> streams.getJSONObject(k).let { n += it.optLong("samples"); b += it.optLong("bytes") } }
-            SessionSummary(d.name, m?.optString("status") ?: "NO_MANIFEST", n, b, m?.optString("start_utc"))
+            SessionSummary(
+                d.name, m?.optString("status") ?: "NO_MANIFEST", n, b, m?.optString("start_utc"),
+                com.wearlab.watch.transfer.PhoneSync.statusOf(d).name,
+            )
         }
 
     /**

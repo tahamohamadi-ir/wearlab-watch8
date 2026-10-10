@@ -38,6 +38,10 @@ data class SensorConfig(val rateHz: Float = 50f)
 interface SensorAdapter {
     val type: SensorType
     val channels: List<String>
+
+    /** A continuous tracker that delivers nothing for this long is considered stalled and is restarted. */
+    val silenceTimeoutSec: Int? get() = null
+
     suspend fun availability(): Availability
 
     /** Chip/vendor details written into metadata.json; empty when unknown. */

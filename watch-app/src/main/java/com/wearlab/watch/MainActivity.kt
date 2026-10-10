@@ -15,6 +15,7 @@ import com.wearlab.watch.sensor.capability.CapabilityInspector
 import com.wearlab.watch.session.ScheduleConfig
 import com.wearlab.watch.session.ScheduleStore
 import com.wearlab.watch.session.SessionManager
+import com.wearlab.watch.session.SessionState
 import com.wearlab.watch.storage.SessionStore
 import com.wearlab.watch.storage.SessionSummary
 import com.wearlab.watch.ui.AppActions
@@ -39,6 +40,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var store: SessionStore
     private var sessionList by mutableStateOf(emptyList<SessionSummary>())
     private var schedule by mutableStateOf<ScheduleConfig?>(null)
+    private var syncStatus by mutableStateOf<String?>(null)
+    private var syncing by mutableStateOf(false)
 
     private val permLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         scan()
@@ -85,6 +88,17 @@ class MainActivity : ComponentActivity() {
             onMark = { mgr.mark() },
             onSchedule = { schedule = it; ScheduleStore.save(this, it) },
             onReloadSessions = { sessionList = store.list() },
+            onSyncPhone = {
+                if (!syncing) lifecycleScope.launch {
+                    syncing = true
+                    syncStatus = "connecting..."
+                    syncStatus = runCatching {
+                        com.wearlab.watch.transfer.PhoneSync.syncAll(this@MainActivity, store) { syncStatus = it }.message
+                    }.getOrElse { "failed: ${it.message}" }
+                    sessionList = store.list()
+                    syncing = false
+                }
+            },
         )
 
         setContent {
@@ -92,6 +106,13 @@ class MainActivity : ComponentActivity() {
             val sui by mgr.ui.collectAsState()
             // Refresh the saved-session list when a session finishes.
             LaunchedEffect(sui.state) { sessionList = store.list() }
+            // Display on while a capture window runs (the activity flag works where a screen wake lock does not).
+            val busy = sui.state in setOf(SessionState.STARTING, SessionState.RUNNING)
+            LaunchedEffect(busy, schedule?.keepScreenOn, sui.phase) {
+                if (busy && schedule?.keepScreenOn == true && sui.phase != "WAITING") {
+                    window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
             schedule?.let { sch ->
                 WearLabApp(
                     AppState(
@@ -99,6 +120,7 @@ class MainActivity : ComponentActivity() {
                         session = sui, sessions = sessionList, schedule = sch,
                         protocols = store.protocolNames(), protocolDefaults = ::defaults,
                         battery = DeviceInfo.batteryPercent(this), exportStatus = exportStatus,
+                        syncStatus = syncStatus, syncing = syncing,
                     ),
                     actions,
                 )

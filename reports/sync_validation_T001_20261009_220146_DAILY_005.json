@@ -57,7 +57,7 @@
       "windows": 3,
       "active_duration_s": 89.929,
       "observed_rate_hz": 49.806,
-      "nominal_rate_hz": null,
+      "nominal_rate_hz": 50,
       "dt_ms": {
         "median": 20.107654,
         "p95": 21.846616,
@@ -82,7 +82,7 @@
       "windows": 3,
       "active_duration_s": 89.988,
       "observed_rate_hz": 49.818,
-      "nominal_rate_hz": null,
+      "nominal_rate_hz": 50,
       "dt_ms": {
         "median": 20.107577,
         "p95": 21.84223,
@@ -107,7 +107,7 @@
       "windows": 3,
       "active_duration_s": 89.768,
       "observed_rate_hz": 9.97,
-      "nominal_rate_hz": null,
+      "nominal_rate_hz": 10,
       "dt_ms": {
         "median": 100.446962,
         "p95": 102.390307,
@@ -132,7 +132,7 @@
       "windows": 3,
       "active_duration_s": 89.805,
       "observed_rate_hz": 7.115,
-      "nominal_rate_hz": null,
+      "nominal_rate_hz": 7,
       "dt_ms": {
         "median": 140.60723,
         "p95": 142.710538,
@@ -309,7 +309,7 @@
       "windows": 3,
       "active_duration_s": 90.052,
       "observed_rate_hz": 0.1,
-      "nominal_rate_hz": null,
+      "nominal_rate_hz": 0.1,
       "dt_ms": {
         "median": 10006.0,
         "p95": 10009.0,

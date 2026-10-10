@@ -33,6 +33,7 @@ data class Protocol(
     /** 0 = record continuously for the whole duration. */
     val intervalMin: Int = 0,
     val windowSec: Int = 0,
+    val keepScreenOn: Boolean = false,
 )
 
 /**
@@ -48,6 +49,8 @@ data class ScheduleConfig(
     val windowSec: Int,
     val sensors: Set<String>,
     val rateHz: Float,
+    /** Keeps the display on while recording: Samsung HR/EDA/PPG trackers stall in bursts when it is off. */
+    val keepScreenOn: Boolean = false,
 ) {
     val continuous get() = intervalMin <= 0
     val totalSec get() = totalMin * 60
@@ -60,7 +63,7 @@ data class ScheduleConfig(
     companion object {
         fun from(p: Protocol) = ScheduleConfig(
             p.id, p.durationSec / 60, p.intervalMin, if (p.windowSec > 0) p.windowSec else 60,
-            p.sensors.toSet(), p.rateHz,
+            p.sensors.toSet(), p.rateHz, p.keepScreenOn,
         )
     }
 }
@@ -76,13 +79,14 @@ object ScheduleStore {
             p.getString("base", fallback.protocolBase)!!, p.getInt("total", fallback.totalMin),
             p.getInt("interval", fallback.intervalMin), p.getInt("window", fallback.windowSec),
             p.getStringSet("sensors", fallback.sensors)!!.toSet(), p.getFloat("rate", fallback.rateHz),
+            p.getBoolean("screen", fallback.keepScreenOn),
         )
     }
 
     fun save(c: Context, s: ScheduleConfig) {
         prefs(c).edit().putString("base", s.protocolBase).putInt("total", s.totalMin)
             .putInt("interval", s.intervalMin).putInt("window", s.windowSec)
-            .putStringSet("sensors", s.sensors).putFloat("rate", s.rateHz).apply()
+            .putStringSet("sensors", s.sensors).putFloat("rate", s.rateHz).putBoolean("screen", s.keepScreenOn).apply()
     }
 }
 

@@ -41,6 +41,7 @@ Smartwatch sensing, EMA and HRV features are well-trodden. The contribution of t
 | **Validation-first acquisition**: an automatic synchronization report (`analysis/preprocessing/sync_validation.py`) caught two *silent* data-loss modes that a normal logger would have shipped as clean data - a default 64-slot callback buffer dropping PPG bursts (203 sequence breaks in a 5-min session) and CPU suspend with the screen off costing ~15 % of ACC/GYRO samples. Both are fixed and the before/after numbers are recorded. | `reports/`, `docs/sensor-notes/2026-10-09_first-hardware-run.md` |
 | **Context that explains artefacts**: off-body detector, battery temperature/charging/thermal state and per-sample quality flags. In a real test they showed the watch was on its charger - explaining EDA status -5 / HR status -3 - instead of the data being silently treated as valid. | `SystemAdapter`, `OFFBODY` stream |
 | **Duty-cycled capture windows with exact-alarm wake-up** (e.g. 60 s every 10 min), per-window completeness events and window-aware statistics - infrastructure for the adaptive-sensing question (RQ6). | `SessionManager`, `events.jsonl` |
+| **Silent-stall detection**: per-tracker watchdog + a controlled screen-on/off experiment that identified why wearable physiology streams go missing (display state, not code), with before/after numbers. | `docs/sensor-notes/` |
 | **Dataset self-description**: manifest with SHA-256 per stream, chip/vendor/max-rate per sensor, app/firmware/Health Platform versions, full schedule. | `manifest.json`, `metadata.json` |
 
 Not claimed: new algorithms, validated stress/attention detection, or medical accuracy. Those are the later phases.
@@ -63,6 +64,8 @@ Not claimed: new algorithms, validated stress/attention detection, or medical ac
 | HR+IBI | 1.0 / 1 Hz | 0 | 0 |
 | ECG (on-demand) | 500 Hz, lead-off flag valid | - | - |
 
+**Important finding:** the Samsung HR/EDA/PPG trackers throttle to short bursts when the watch display is off (PPG 48-61 % missing, EDA 0.3 Hz). With the display kept on the same 5-minute session is complete (PPG 24.94 Hz, EDA 0.996 Hz, 0 stalls). The app has a *Keep screen on* option and a tracker watchdog that restarts stalled trackers and logs every stall (`tracker_silent` / `tracker_restart`). Details in `docs/sensor-notes/`.
+
 Clock health over a session: UTC-minus-monotonic range ~1 ms, drift ~1 ms/h (30 sync points / 5 min). Periodic mode (3 x 30 s windows, 2 min apart): every window started within 58-151 ms of schedule with zero gaps. Full tables: [`reports/`](reports/).
 
 ## Architecture
@@ -77,13 +80,17 @@ flowchart LR
   R -.planned.-> G[Bronze / Silver / Gold] -.-> M[Features -> baseline -> models -> on-watch inference]
 ```
 
+**Transfer (Phase 4).** The watch offers a session (`OFFER`: file names, sizes, SHA-256); the phone asks only for files it lacks or that do not match (`WANT`), receives them over the Wearable Data Layer (gzip on the wire, ~5x faster over Bluetooth), recomputes every SHA-256 from the received bytes and only then replies `ACK`. The watch never deletes anything and marks a session `ACKNOWLEDGED` only after that ACK. `analysis/preprocessing/verify_transfer.py` repeats the check on the PC against the watch's own manifest. A mixed-version test showed a rejected (non-gzip) stream is refused instead of stored.
+
 Principles (ADRs in [`docs/decisions/`](docs/decisions/)): raw data is immutable; UTC is canonical wall-clock and monotonic orders samples; capability-first (availability is read from the device); status flags are stored, never dropped.
 
 ## Repository layout
 
 ```
-watch-app/        Wear OS app (Kotlin, Compose for Wear OS); packages: sensor/ session/ storage/ acquisition/ ui/
-analysis/         Python tools (stdlib only): sync_validation.py
+watch-app/        Wear OS app (Kotlin, Compose for Wear OS); packages: sensor/ session/ storage/ acquisition/ transfer/ ui/
+phone-gateway/    Android phone app: receives and verifies sessions (same applicationId as the watch app, as the Data Layer requires)
+common/           Shared transfer protocol (paths, JSON, SHA-256)
+analysis/         Python tools (stdlib only): sync_validation.py, verify_transfer.py
 reports/          Real synchronization reports from the test sessions
 schemas/          JSON schema of the device capability report
 docs/             architecture (Persian master document), ADRs, sensor notes
@@ -97,8 +104,7 @@ Requirements: JDK 17+, Android SDK 35, a Galaxy Watch8 with Developer options an
 2. On the watch enable **Developer mode inside the *Health Platform* app** (tap its title ~10 times, then Developer mode -> On). Without it every Samsung tracker returns `SDK_POLICY_ERROR`.
 3. Windows note: if the project path contains non-ASCII characters, build through an ASCII junction (the Android test JVM cannot resolve them).
 4. `gradlew testDebugUnitTest assembleDebug`, then `adb install -r watch-app/build/outputs/apk/debug/watch-app-debug.apk`.
-5. Record a session on the watch (Record -> START, or set a schedule), then pull it:
-   `adb exec-out run-as com.wearlab.watch tar c files/sessions > sessions.tar`
+5. Record a session on the watch (Record -> START, or set a schedule). Install `phone-gateway` on the paired phone (`adb install phone-gateway/build/outputs/apk/debug/phone-gateway-debug.apk`), then on the watch: Sessions -> Send to phone. Pull on the PC: `adb pull /sdcard/Android/data/com.wearlab.watch/files/received` and run `python analysis/preprocessing/verify_transfer.py received`. (Direct alternative: `adb exec-out run-as com.wearlab.watch tar c files/sessions > sessions.tar`.)
 6. Validate: `python analysis/preprocessing/sync_validation.py <session_dir> reports`
 
 Per session: `manifest.json` (status, per-stream counts/checksums/gaps), `metadata.json` (device, firmware, schedule, sensor hardware), `events.jsonl` (window start/stop, clock sync, markers, errors) and one CSV per stream with columns `window, sequence, source_ts_ns, monotonic_ns, utc_ns, session_offset_ns, quality, <channels>`.
@@ -113,7 +119,7 @@ On-change sensors (off-body, steps): the first row of each window is the *curren
 | 2 | Research logger, manifest, crash recovery | done |
 | 3 | Time and synchronization validation | done |
 | 3b | Duty-cycled windows, GPS, 18 sensors | done (GPS needs an outdoor test) |
-| 4 | S9 gateway with checksum-verified transfer | next |
+| 4 | Phone gateway: checksum-verified Watch -> phone -> PC transfer | **done** (6/6 sessions verified end to end) |
 | 5-6 | Bronze/Silver/Gold pipeline, signal-quality scores | planned |
 | 7-10 | 7-day pilot, features, personal baseline, attention study | planned |
 | 11-16 | Classical ML, multimodal ablation, personalization, TinyML, adaptive sensing | planned |

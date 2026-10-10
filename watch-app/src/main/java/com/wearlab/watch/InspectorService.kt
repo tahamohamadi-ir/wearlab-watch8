@@ -17,6 +17,7 @@ import android.os.PowerManager
 /** Keeps the process alive (foreground) so streams survive screen-off; owns the sensor wake lock. */
 class InspectorService : Service() {
     private var wakeLock: PowerManager.WakeLock? = null
+    private var screenLock: PowerManager.WakeLock? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -37,6 +38,13 @@ class InspectorService : Service() {
         startForeground(1, n, type)
         wakeLock = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "wearlab:sensors")
         setAwake(true)
+        @Suppress("DEPRECATION")
+        screenLock = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "wearlab:screen")
+    }
+
+    private fun setScreen(on: Boolean) {
+        val w = screenLock ?: return
+        if (on && !w.isHeld) w.acquire() else if (!on && w.isHeld) w.release()
     }
 
     private fun setAwake(on: Boolean) {
@@ -51,6 +59,7 @@ class InspectorService : Service() {
     }
 
     override fun onDestroy() {
+        setScreen(false)
         setAwake(false)
         instance = null
         super.onDestroy()
@@ -76,6 +85,9 @@ class InspectorService : Service() {
 
         /** Between capture windows the CPU may sleep (battery); during a window it must not. */
         fun awake(on: Boolean) { instance?.setAwake(on) }
+
+        /** Dim screen wake lock: keeps the display on so the Samsung trackers do not throttle. */
+        fun screen(on: Boolean) { instance?.setScreen(on) }
 
         /** Wakes the device at [elapsedRealtimeMs] so the next capture window starts on time. */
         fun scheduleWindow(c: Context, elapsedRealtimeMs: Long) {

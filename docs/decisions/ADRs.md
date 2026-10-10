@@ -7,4 +7,6 @@
 - ADR-006 No 24/7 raw collection by default.
 - ADR-007 Personal baseline is a first-class feature.
 - ADR-008 Capability-first: sensor availability is read from the device, never hardcoded.
-- ADR-009 Single Gradle module with package-per-concern until a second consumer exists.
+- ADR-009 Package-per-concern inside the watch app; a second module (`common`) only for what two apps truly share (transfer protocol).
+- ADR-010 A transfer is only ACKNOWLEDGED after the receiver recomputes SHA-256 from received bytes; the source is never deleted automatically.
+- ADR-011 Stalled continuous trackers are restarted by a watchdog and every restart/silence is recorded as an event (no silent loss).

@@ -80,6 +80,8 @@ class AppState(
     val protocolDefaults: (String) -> ScheduleConfig,
     val battery: Int?,
     val exportStatus: String?,
+    val syncStatus: String?,
+    val syncing: Boolean,
 )
 
 class AppActions(
@@ -92,6 +94,7 @@ class AppActions(
     val onMark: () -> Unit,
     val onSchedule: (ScheduleConfig) -> Unit,
     val onReloadSessions: () -> Unit,
+    val onSyncPhone: () -> Unit,
 )
 
 @Composable
@@ -336,6 +339,15 @@ private fun Settings(s: AppState, a: AppActions) {
             }
         }
         item { Picker("Sample rate", RATES, c.rateHz, { "%.0f Hz".format(it) }) { set(c.copy(rateHz = it)) } }
+        item {
+            ToggleChip(
+                checked = c.keepScreenOn, modifier = Modifier.fillMaxWidth(),
+                onCheckedChange = { set(c.copy(keepScreenOn = it)) },
+                label = { Text("Keep screen on") },
+                secondaryLabel = { Text("steadier HR/EDA/PPG, more battery", maxLines = 2) },
+                toggleControl = { Icon(imageVector = ToggleChipDefaults.switchIcon(c.keepScreenOn), contentDescription = null) },
+            )
+        }
         item { Small(estimate(c), Grey) }
         item { Text("Sensors", style = MaterialTheme.typography.caption1, color = Cyan) }
         for (t in RECORDABLE) item {
@@ -378,7 +390,15 @@ private fun Sessions(s: AppState, a: AppActions) = Screen("Sessions") {
             onClick = {}, modifier = Modifier.fillMaxWidth(), colors = ChipDefaults.secondaryChipColors(),
             icon = { Dot(color) },
             label = { Text(x.id.substringAfter('_').take(13) + " " + x.id.substringAfterLast('_'), fontSize = 12.sp, maxLines = 1) },
-            secondaryLabel = { Text("${x.status.lowercase()}  ${x.samples} smp  ${x.bytes / 1024} KB", fontSize = 10.sp, maxLines = 1) },
+            secondaryLabel = { Text("${x.status.lowercase()}  ${x.bytes / 1024} KB  ${x.transfer.lowercase()}", fontSize = 10.sp, maxLines = 1) },
+        )
+    }
+    item {
+        Chip(
+            onClick = a.onSyncPhone, enabled = !s.syncing, modifier = Modifier.fillMaxWidth(),
+            colors = ChipDefaults.primaryChipColors(),
+            label = { Text(if (s.syncing) "Sending..." else "Send to phone") },
+            secondaryLabel = { Text(s.syncStatus ?: "checksum-verified", maxLines = 2) },
         )
     }
     item { CompactChip(onClick = a.onReloadSessions, label = { Text("Reload") }) }

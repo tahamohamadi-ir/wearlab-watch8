@@ -6,4 +6,6 @@ dependencyResolutionManagement {
     repositories { google(); mavenCentral() }
 }
 rootProject.name = "wearlab"
+include(":common")
 include(":watch-app")
+include(":phone-gateway")

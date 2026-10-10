@@ -22,3 +22,23 @@ ECG (on-demand, needs finger on electrode) not tested yet.
 - ECG (on-demand): 500 Hz, lead_off=0 with finger on top button, ends by itself after ~30 s. Samples arrive in batches, so per-interval dt stats are meaningless for ECG; use observed rate.
 - Open: EDA/HR_IBI sometimes deliver fewer than 1 sample/s (269-296 in 300 s); likely SDK status gating, check `status` columns.
 - MARK button verified: writes `marker` events with UTC + monotonic + session offset.
+
+## Update 2026-10-10: worn 5-min session at 100 Hz (BASELINE_REST_V2, T001_20261010_162734_BASELINE_006)
+- ACC / GYRO / rotation / magnetometer: 99.70 Hz, max dt 16 ms, 0 gaps, 0 sequence breaks. Barometer 9.97 Hz, light 7.1 Hz, PPG 24.93 Hz.
+- EDA: 0.993 Hz, all 258 samples status 0 (valid), 0.01-0.96 uS. HR/IBI: 577 per-beat rows, 456 with status 1 (valid), 120 with status -10; mean valid IBI 649 ms.
+- HR/IBI and EDA both stopped delivering at +259.5 s with no error while ACC/PPG continued (also at +269 s in session 003): the Samsung trackers stall silently when the watch is still and the screen is off. Mitigation implemented: watchdog that restarts a tracker after 10-15 s of silence and logs `tracker_silent` / `tracker_restart`.
+- Phone transfer: Watch -> phone -> PC, 6/6 sessions (28 MB) checksum-verified end to end. Bluetooth Data Layer without compression ~20 KB/s; with gzip ~5x faster.
+- The "phone" used as gateway reports model SM-N975F, Android 12.
+
+## Finding: Samsung trackers need the display on (2026-10-10, sessions 007-009, same wearer, 5 min, 100 Hz)
+
+| Condition | PPG | EDA | HR/IBI | `tracker_silent` events |
+|---|---|---|---|---|
+| Screen off (007) | 12.99 Hz, 48 % missing | 0.34 Hz | 0.37 Hz, ends at 208 s | 45 |
+| Screen off, restart cap hit (008) | 9.67 Hz, 61 % missing | 0.31 Hz | ends at 102 s | 45 |
+| **Screen kept on (009)** | **24.94 Hz, 0 % missing** | **0.996 Hz, all status 0** | 423 beats to 300 s | **0** |
+
+- With the screen off the Health Platform pauses HR/EDA/PPG in bursts (10-15 s of data, then silence). The watchdog restarts the tracker and data returns each time, but only briefly, so restarts cannot fully compensate.
+- A `SCREEN_DIM_WAKE_LOCK` from the foreground service did **not** keep the display on (Wear OS 6): `screen_interactive` stayed 0. The activity flag `FLAG_KEEP_SCREEN_ON` did.
+- Consequence: for physiology, record with the recording screen on ("Keep screen on" in the Schedule screen; costs battery). Motion/environment streams (ACC, GYRO, MAG, BARO, light, steps, GPS) are unaffected by the display and stay clean with the screen off.
+- Capture-window design: windows should be short enough that holding the screen on is affordable; the display is released between windows.
