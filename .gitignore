@@ -1,0 +1,9 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.kotlin/
+
+# Samsung Health Sensor SDK is licensed separately and must not be redistributed
+watch-app/libs/*.aar

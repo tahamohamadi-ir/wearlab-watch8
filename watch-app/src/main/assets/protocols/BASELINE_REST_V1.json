@@ -1,0 +1,9 @@
+{
+  "protocol_id": "BASELINE_REST_V1",
+  "label": "BASELINE",
+  "participant_id": "T001",
+  "duration_sec": 300,
+  "rate_hz": 50,
+  "sensors": ["ACC", "GYRO", "PPG", "EDA", "HR_IBI", "SKIN_TEMP"],
+  "metadata": { "activity": "sitting", "posture": "seated" }
+}

@@ -1,0 +1,146 @@
+{
+  "session_id": "T001_20261009_211146_BASELINE_002",
+  "status": "COMPLETED",
+  "streams": {
+    "ACC": {
+      "samples": 12758,
+      "duration_s": 299.976,
+      "observed_rate_hz": 42.527,
+      "nominal_rate_hz": 50,
+      "dt_ms": {
+        "median": 20.045538,
+        "p95": 21.580154,
+        "p99": 22.000846,
+        "max": 3569.507679,
+        "sd_of_non_gap": 0.9
+      },
+      "gaps_gt_3x_median": 93,
+      "missing_time_ratio": 0.1488,
+      "duplicate_timestamps": 0,
+      "non_monotonic_source_ts": 0,
+      "sequence_discontinuities": 0,
+      "utc_minus_mono_range_ms": 5.489,
+      "first_utc_ns": 1791580306416199107,
+      "last_utc_ns": 1791580606391983332
+    },
+    "GYRO": {
+      "samples": 12758,
+      "duration_s": 299.976,
+      "observed_rate_hz": 42.527,
+      "nominal_rate_hz": 50,
+      "dt_ms": {
+        "median": 20.045423,
+        "p95": 21.579462,
+        "p99": 22.000577,
+        "max": 3569.505371,
+        "sd_of_non_gap": 0.9
+      },
+      "gaps_gt_3x_median": 93,
+      "missing_time_ratio": 0.1488,
+      "duplicate_timestamps": 0,
+      "non_monotonic_source_ts": 0,
+      "sequence_discontinuities": 0,
+      "utc_minus_mono_range_ms": 4.044,
+      "first_utc_ns": 1791580306415784108,
+      "last_utc_ns": 1791580606392390639
+    },
+    "PPG": {
+      "samples": 7400,
+      "duration_s": 296.626,
+      "observed_rate_hz": 24.944,
+      "nominal_rate_hz": 25,
+      "dt_ms": {
+        "median": 40.0,
+        "p95": 40.0,
+        "p99": 40.0,
+        "max": 137.0,
+        "sd_of_non_gap": 2.123
+      },
+      "gaps_gt_3x_median": 1,
+      "missing_time_ratio": 0.0003,
+      "duplicate_timestamps": 0,
+      "non_monotonic_source_ts": 2,
+      "sequence_discontinuities": 0,
+      "utc_minus_mono_range_ms": 0.919,
+      "first_utc_ns": 1791580306601000000,
+      "last_utc_ns": 1791580603227000000
+    },
+    "EDA": {
+      "samples": 279,
+      "duration_s": 298.172,
+      "observed_rate_hz": 0.932,
+      "nominal_rate_hz": 1,
+      "dt_ms": {
+        "median": 1000.0,
+        "p95": 1999.0,
+        "p99": 2000.0,
+        "max": 2001.0,
+        "sd_of_non_gap": 254.63
+      },
+      "gaps_gt_3x_median": 0,
+      "missing_time_ratio": 0.0,
+      "duplicate_timestamps": 0,
+      "non_monotonic_source_ts": 0,
+      "sequence_discontinuities": 0,
+      "utc_minus_mono_range_ms": 0.982,
+      "first_utc_ns": 1791580306913000000,
+      "last_utc_ns": 1791580605085000000
+    },
+    "HR_IBI": {
+      "samples": 298,
+      "duration_s": 297.672,
+      "observed_rate_hz": 0.998,
+      "nominal_rate_hz": 1,
+      "dt_ms": {
+        "median": 1000.0,
+        "p95": 1002.0,
+        "p99": 1101.0,
+        "max": 1291.0,
+        "sd_of_non_gap": 21.141
+      },
+      "gaps_gt_3x_median": 0,
+      "missing_time_ratio": 0.0,
+      "duplicate_timestamps": 0,
+      "non_monotonic_source_ts": 0,
+      "sequence_discontinuities": 0,
+      "utc_minus_mono_range_ms": 1.286,
+      "first_utc_ns": 1791580307333000000,
+      "last_utc_ns": 1791580605005000000
+    },
+    "SKIN_TEMP": {
+      "samples": 4,
+      "duration_s": 180.318,
+      "observed_rate_hz": 0.017,
+      "nominal_rate_hz": 0.016666666666666666,
+      "dt_ms": {
+        "median": 60000.0,
+        "p95": 60318.0,
+        "p99": 60318.0,
+        "max": 60318.0,
+        "sd_of_non_gap": 149.907
+      },
+      "gaps_gt_3x_median": 0,
+      "missing_time_ratio": 0.0,
+      "duplicate_timestamps": 0,
+      "non_monotonic_source_ts": 0,
+      "sequence_discontinuities": 0,
+      "utc_minus_mono_range_ms": 0.109,
+      "first_utc_ns": 1791580366749000000,
+      "last_utc_ns": 1791580547067000000
+    }
+  },
+  "clock": {
+    "markers": [],
+    "other_events": [
+      "clock_sync",
+      "sensor_start",
+      "sensor_stop",
+      "session_finalized",
+      "session_running"
+    ],
+    "clock_sync_points": 25,
+    "utc_minus_mono_range_ms": 0.908,
+    "drift_ms_per_hour": 0.103
+  },
+  "common_window_s": 180.318
+}

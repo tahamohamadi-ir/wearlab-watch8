@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Device Capability Report v1",
+  "type": "object",
+  "required": ["report_version", "generated_utc_ns", "device", "permissions", "samsung_sdk", "android_sensors", "sensors"],
+  "properties": {
+    "report_version": { "const": 1 },
+    "generated_utc_ns": { "type": "string" },
+    "device": { "type": "object" },
+    "permissions": { "type": "object", "additionalProperties": { "type": "boolean" } },
+    "samsung_sdk": {
+      "type": "object",
+      "required": ["connected", "supported_tracker_types"],
+      "properties": {
+        "connected": { "type": "boolean" },
+        "error": { "type": ["string", "null"] },
+        "capability_version": { "type": ["string", "null"] },
+        "supported_tracker_types": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "android_sensors": { "type": "array", "items": { "type": "object" } },
+    "sensors": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["state"],
+        "properties": { "state": { "enum": ["AVAILABLE", "UNAVAILABLE"] }, "reason": { "type": "string" } }
+      }
+    },
+    "last_runs": { "type": "object" }
+  }
+}

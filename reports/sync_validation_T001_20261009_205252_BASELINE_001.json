@@ -1,0 +1,142 @@
+{
+  "session_id": "T001_20261009_205252_BASELINE_001",
+  "status": "COMPLETED",
+  "streams": {
+    "ACC": {
+      "samples": 14978,
+      "duration_s": 300.406,
+      "observed_rate_hz": 49.856,
+      "nominal_rate_hz": 50,
+      "dt_ms": {
+        "median": 20.087308,
+        "p95": 21.21273,
+        "p99": 21.324538,
+        "max": 22.3515,
+        "sd_of_non_gap": 0.746
+      },
+      "gaps_gt_3x_median": 0,
+      "missing_time_ratio": 0.0,
+      "duplicate_timestamps": 0,
+      "non_monotonic_source_ts": 0,
+      "sequence_discontinuities": 0,
+      "utc_minus_mono_range_ms": 1.033,
+      "first_utc_ns": 1791579172472493964,
+      "last_utc_ns": 1791579472879410689
+    },
+    "GYRO": {
+      "samples": 14979,
+      "duration_s": 300.416,
+      "observed_rate_hz": 49.857,
+      "nominal_rate_hz": 50,
+      "dt_ms": {
+        "median": 20.0871535,
+        "p95": 21.212538,
+        "p99": 21.324384,
+        "max": 22.351731,
+        "sd_of_non_gap": 0.75
+      },
+      "gaps_gt_3x_median": 0,
+      "missing_time_ratio": 0.0,
+      "duplicate_timestamps": 0,
+      "non_monotonic_source_ts": 0,
+      "sequence_discontinuities": 0,
+      "utc_minus_mono_range_ms": 1.026,
+      "first_utc_ns": 1791579172462867579,
+      "last_utc_ns": 1791579472879050458
+    },
+    "PPG": {
+      "samples": 6370,
+      "duration_s": 296.808,
+      "observed_rate_hz": 21.458,
+      "nominal_rate_hz": 25,
+      "dt_ms": {
+        "median": 40.0,
+        "p95": 40.0,
+        "p99": 240.0,
+        "max": 2520.0,
+        "sd_of_non_gap": 7.467
+      },
+      "gaps_gt_3x_median": 98,
+      "missing_time_ratio": 0.1208,
+      "duplicate_timestamps": 0,
+      "non_monotonic_source_ts": 0,
+      "sequence_discontinuities": 203,
+      "utc_minus_mono_range_ms": 0.991,
+      "first_utc_ns": 1791579172586000000,
+      "last_utc_ns": 1791579469394000000
+    },
+    "EDA": {
+      "samples": 296,
+      "duration_s": 299.365,
+      "observed_rate_hz": 0.985,
+      "nominal_rate_hz": 1,
+      "dt_ms": {
+        "median": 1003.0,
+        "p95": 1004.0,
+        "p99": 1505.0,
+        "max": 2001.0,
+        "sd_of_non_gap": 95.672
+      },
+      "gaps_gt_3x_median": 0,
+      "missing_time_ratio": 0.0,
+      "duplicate_timestamps": 0,
+      "non_monotonic_source_ts": 0,
+      "sequence_discontinuities": 0,
+      "utc_minus_mono_range_ms": 1.003,
+      "first_utc_ns": 1791579172971000000,
+      "last_utc_ns": 1791579472336000000
+    },
+    "HR_IBI": {
+      "samples": 299,
+      "duration_s": 298.865,
+      "observed_rate_hz": 0.997,
+      "nominal_rate_hz": 1,
+      "dt_ms": {
+        "median": 1003.0,
+        "p95": 1004.0,
+        "p99": 1004.0,
+        "max": 1004.0,
+        "sd_of_non_gap": 0.879
+      },
+      "gaps_gt_3x_median": 0,
+      "missing_time_ratio": 0.0,
+      "duplicate_timestamps": 0,
+      "non_monotonic_source_ts": 0,
+      "sequence_discontinuities": 0,
+      "utc_minus_mono_range_ms": 1.008,
+      "first_utc_ns": 1791579173271000000,
+      "last_utc_ns": 1791579472136000000
+    },
+    "SKIN_TEMP": {
+      "samples": 4,
+      "duration_s": 180.549,
+      "observed_rate_hz": 0.017,
+      "nominal_rate_hz": 0.016666666666666666,
+      "dt_ms": {
+        "median": 60181.0,
+        "p95": 60196.0,
+        "p99": 60196.0,
+        "max": 60196.0,
+        "sd_of_non_gap": 9.899
+      },
+      "gaps_gt_3x_median": 0,
+      "missing_time_ratio": 0.0,
+      "duplicate_timestamps": 0,
+      "non_monotonic_source_ts": 0,
+      "sequence_discontinuities": 0,
+      "utc_minus_mono_range_ms": 0.733,
+      "first_utc_ns": 1791579232565000000,
+      "last_utc_ns": 1791579413114000000
+    }
+  },
+  "clock": {
+    "markers": [],
+    "other_events": [
+      "sensor_start",
+      "sensor_stop",
+      "session_finalized",
+      "session_running"
+    ]
+  },
+  "common_window_s": 180.549
+}

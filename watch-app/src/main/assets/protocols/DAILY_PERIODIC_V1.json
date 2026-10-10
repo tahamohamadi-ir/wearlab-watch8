@@ -1,0 +1,11 @@
+{
+  "protocol_id": "DAILY_PERIODIC_V1",
+  "label": "DAILY",
+  "participant_id": "T001",
+  "duration_sec": 28800,
+  "rate_hz": 25,
+  "interval_min": 10,
+  "window_sec": 60,
+  "sensors": ["ACC", "PPG", "HR_IBI", "EDA", "SKIN_TEMP_OD", "LOCATION"],
+  "metadata": { "activity": "daily_life" }
+}
