@@ -7,3 +7,8 @@ local.properties
 
 # Samsung Health Sensor SDK is licensed separately and must not be redistributed
 watch-app/libs/*.aar
+
+__pycache__/
+*.pyc
+data/
+wearlab_data/

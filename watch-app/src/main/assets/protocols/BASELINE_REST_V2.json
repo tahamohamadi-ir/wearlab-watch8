@@ -4,6 +4,7 @@
   "participant_id": "T001",
   "duration_sec": 300,
   "rate_hz": 100,
+  "keep_screen_on": true,
   "sensors": ["ACC", "GYRO", "ROTATION", "MAG", "BARO", "LIGHT", "OFFBODY", "STEPS", "PPG", "HR_IBI", "EDA", "SKIN_TEMP", "SYSTEM"],
   "metadata": { "activity": "sitting", "posture": "seated" }
 }

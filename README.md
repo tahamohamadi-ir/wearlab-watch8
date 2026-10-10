@@ -111,6 +111,24 @@ Per session: `manifest.json` (status, per-stream counts/checksums/gaps), `metada
 
 On-change sensors (off-body, steps): the first row of each window is the *current state*, timestamped when that state began (possibly before the window) - forward-fill it.
 
+## Analysis pipeline (Bronze -> Silver -> Gold)
+
+```
+pip install -r analysis/requirements.txt
+cd analysis
+python -m wearlab.pipeline <session_dir> [<session_dir> ...] --out data --tz 3.5   # bronze + silver + gold
+python -m wearlab.report data                                                       # data/report.html
+python -m unittest discover -s tests                                                # 19 tests, synthetic signals with known answers
+```
+
+| Layer | Content |
+|---|---|
+| Bronze | lossless parquet copy of every CSV + source checksums (`_bronze.json`) |
+| Silver | every sample flagged valid/invalid by explicit rules (`validity.py`, never deleted); 30 s windows with coverage, validity ratios, context (on-body, charging) |
+| Gold | `features_FS_V1.parquet`: HRV (SDNN, RMSSD, pNN50 with artefact rejection), PPG pulse rate + spectral SQI, EDA (SCL, slope, SCR count/amplitude), motion (SMA, jerk, dominant frequency, entropy, bursts, stillness), wrist tilt, skin temperature, barometer/light/steps; **separate usable flags per modality** (motion / PPG / HRV / EDA) and personal-baseline z-scores (robust median/MAD over quiet, on-wrist windows, only once >= 5 baseline windows exist) |
+
+Honest status on the four recorded sessions (30 s windows): motion is usable in 100 % of windows; EDA in 0-100 % and HRV/PPG in 0-40 % depending on screen state and wrist motion. A transfer-verified session recorded with the screen on and the wrist still gives the best yield. Real-data checks that changed the code: the PPG **green** channel tracks the device heart rate (IR/red lock onto slow artefacts), and a 9 s EDA tonic window halves SCR amplitude (now ~21 s). All quality thresholds are provisional until calibrated against ECG; they are recorded in `gold/feature_manifest.json` together with the checksums of the source sessions.
+
 ## Roadmap
 
 | Phase | Content | State |
@@ -120,8 +138,10 @@ On-change sensors (off-body, steps): the first row of each window is the *curren
 | 3 | Time and synchronization validation | done |
 | 3b | Duty-cycled windows, GPS, 18 sensors | done (GPS needs an outdoor test) |
 | 4 | Phone gateway: checksum-verified Watch -> phone -> PC transfer | **done** (6/6 sessions verified end to end) |
-| 5-6 | Bronze/Silver/Gold pipeline, signal-quality scores | planned |
-| 7-10 | 7-day pilot, features, personal baseline, attention study | planned |
+| 5-6 | Bronze/Silver/Gold pipeline, signal-quality scores | **done** (v0.1; thresholds provisional) |
+| 7 | 7-day pilot | next (needs daily wear + Keep-screen-on policy) |
+| 8-9 | Feature set FS_V1, personal baseline | **done** (baseline fits once >= 5 quiet windows) |
+| 10 | Attention study (Stroop/CPT, EMA) | planned |
 | 11-16 | Classical ML, multimodal ablation, personalization, TinyML, adaptive sensing | planned |
 
 The full plan (modules, protocols, validation strategy, risk register) is in [`docs/architecture/`](docs/architecture/).
