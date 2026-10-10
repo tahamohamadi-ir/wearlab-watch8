@@ -1,0 +1,12 @@
+{
+  "study_id": "ATTENTION_V1",
+  "session_protocol": "ATTENTION_V1",
+  "ema_items": ["focus", "stress", "anxiety", "restlessness", "fatigue", "sleepiness", "mood", "perceived_workload"],
+  "phases": [
+    { "id": "REST_1",   "type": "REST",   "sec": 120 },
+    { "id": "STROOP",   "type": "STROOP", "sec": 180 },
+    { "id": "REST_2",   "type": "REST",   "sec": 120 },
+    { "id": "CPT",      "type": "CPT",    "sec": 180 },
+    { "id": "REST_3",   "type": "REST",   "sec": 120 }
+  ]
+}

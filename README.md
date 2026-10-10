@@ -111,6 +111,16 @@ Per session: `manifest.json` (status, per-stream counts/checksums/gaps), `metada
 
 On-change sensors (off-body, steps): the first row of each window is the *current state*, timestamped when that state began (possibly before the window) - forward-fill it.
 
+## Attention study (Phase 10 software)
+
+`Home -> Attention study` runs, on the watch itself and inside a normal recording session: EMA (8 items, 0-10) -> 2 min rest -> **Stroop** (3 min) -> rest -> **CPT** (3 min) -> rest -> EMA. Running the tasks on the same device as the sensors means every stimulus, answer and phase boundary is stamped on the same monotonic clock - no cross-device synchronization error to estimate.
+
+- Stroop: 50 % congruent / 50 % incongruent, answer = the **ink** colour on four fixed unlabeled colour buttons; seeded generator (the seed is in `events.jsonl`).
+- CPT: letter stream, 250 ms on / 1250 ms SOA, ~15 % targets ('X'), never two targets in a row; hits, omissions, commissions, anticipatory (<100 ms) and d'.
+- Output per session: `task_events.csv` (every trial/answer/RT, EMA values; listed with a SHA-256 in `manifest.json`) plus `phase_start/phase_stop/ema_start/ema_end` events. Stimulus onset is stamped at the first drawn frame (+- ~16 ms).
+- Analysis: `wearlab/study.py` labels each window with its phase and adds Stroop (RT, accuracy, interference), CPT (RT mean/SD, omissions, commissions, d') and EMA pre/post/delta; no model is fitted on these labels.
+- Verified on the Watch8 with scripted touch input: 0 negative RTs, scoring exact (always answering BLUE is correct on exactly the blue-ink trials), manifest/transfer include the task file. A software `ATTENTION_DEMO` (1 min) exists for smoke tests only - its data are not for analysis.
+
 ## Analysis pipeline (Bronze -> Silver -> Gold)
 
 ```
@@ -118,7 +128,7 @@ pip install -r analysis/requirements.txt
 cd analysis
 python -m wearlab.pipeline <session_dir> [<session_dir> ...] --out data --tz 3.5   # bronze + silver + gold
 python -m wearlab.report data                                                       # data/report.html
-python -m unittest discover -s tests                                                # 19 tests, synthetic signals with known answers
+python -m unittest discover -s tests                                                # 25 tests, synthetic signals with known answers
 ```
 
 | Layer | Content |
@@ -141,7 +151,7 @@ Honest status on the four recorded sessions (30 s windows): motion is usable in 
 | 5-6 | Bronze/Silver/Gold pipeline, signal-quality scores | **done** (v0.1; thresholds provisional) |
 | 7 | 7-day pilot | next (needs daily wear + Keep-screen-on policy) |
 | 8-9 | Feature set FS_V1, personal baseline | **done** (baseline fits once >= 5 quiet windows) |
-| 10 | Attention study (Stroop/CPT, EMA) | planned |
+| 10 | Attention study (Stroop/CPT, EMA) | **software done and hardware-tested**; real participant sessions next |
 | 11-16 | Classical ML, multimodal ablation, personalization, TinyML, adaptive sensing | planned |
 
 The full plan (modules, protocols, validation strategy, risk register) is in [`docs/architecture/`](docs/architecture/).

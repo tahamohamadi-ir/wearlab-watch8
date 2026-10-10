@@ -1,0 +1,10 @@
+{
+  "protocol_id": "ATTENTION_V1",
+  "label": "ATTN",
+  "participant_id": "T001",
+  "duration_sec": 780,
+  "rate_hz": 100,
+  "keep_screen_on": true,
+  "sensors": ["ACC", "GYRO", "ROTATION", "MAG", "BARO", "LIGHT", "OFFBODY", "PPG", "HR_IBI", "EDA", "SKIN_TEMP", "SYSTEM"],
+  "metadata": { "study": "ATTENTION_V1", "activity": "seated_computer_tasks" }
+}

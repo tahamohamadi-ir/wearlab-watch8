@@ -22,6 +22,7 @@ import pandas as pd
 from . import FEATURE_SET, PIPELINE_VERSION, features as F
 from .quality import THRESHOLDS, usable_flags
 from .session_io import Session, load_session
+from .study import add_labels
 from .validity import RULES_VERSION, ibi_valid_mask, valid_mask
 
 NOMINAL_HZ = {"PPG": 25.0, "EDA": 1.0, "HR_IBI": 1.0}
@@ -262,6 +263,7 @@ def run(session_dirs: list[str], out: Path, window_s: float = 30.0, tz_h: float 
     (out / "silver").mkdir(parents=True, exist_ok=True)
     win.to_parquet(out / "silver" / "windows.parquet", index=False)
     baseline = json.load(open(baseline_path)) if baseline_path else None
+    win = add_labels(win, sessions)  # phase + task performance + EMA (no-op for sessions without a study)
     g, baseline = add_gold(win, th, baseline)
     gd = out / "gold"
     gd.mkdir(parents=True, exist_ok=True)

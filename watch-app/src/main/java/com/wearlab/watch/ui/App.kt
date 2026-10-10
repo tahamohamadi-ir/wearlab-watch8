@@ -98,12 +98,12 @@ class AppActions(
 )
 
 @Composable
-fun WearLabApp(state: AppState, a: AppActions) {
+fun WearLabApp(state: AppState, a: AppActions, study: com.wearlab.watch.study.StudyRunner, startRoute: String = "home") {
     val nav = rememberSwipeDismissableNavController()
     // NavHost builds its destination lambdas once; without this they would keep the first AppState forever.
     val s by rememberUpdatedState(state)
     MaterialTheme(colors = Palette) {
-        SwipeDismissableNavHost(navController = nav, startDestination = "home") {
+        SwipeDismissableNavHost(navController = nav, startDestination = startRoute) {
             composable("home") { Home(s, nav::navigate) }
             composable("sensors") { SensorList(s) { nav.navigate("sensor/${it.name}") } }
             composable("sensor/{type}") { e ->
@@ -113,6 +113,7 @@ fun WearLabApp(state: AppState, a: AppActions) {
             composable("logger") { Logger(s, a) }
             composable("settings") { Settings(s, a) }
             composable("sessions") { Sessions(s, a) }
+            composable("study") { StudyHost(study) }
         }
     }
 }
@@ -167,6 +168,7 @@ private fun Home(s: AppState, go: (String) -> Unit) {
                 },
             )
         }
+        item { NavChip("Attention study", "Stroop + CPT + EMA, 13 min") { go("study") } }
         item { NavChip("Schedule", s.schedule.summary()) { go("settings") } }
         item { NavChip("Sensors", if (avail == null) "scanning..." else "$avail/${s.availability.size} available") { go("sensors") } }
         item { NavChip("Sessions", "${s.sessions.size} saved") { go("sessions") } }

@@ -64,7 +64,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         store = SessionStore(this)
         val mgr = InspectorRuntime.sessions ?: SessionManager(applicationContext, store).also { InspectorRuntime.sessions = it }
+        // Automation hook for tests: `am start ... --es start_study ATTENTION_DEMO` opens the study screen and runs it.
+        val startStudy = intent.getStringExtra("start_study")
+        val startRoute = if (startStudy != null) "study" else "home"
+        val study = com.wearlab.watch.study.StudyRunner(applicationContext, store, mgr) { InspectorRuntime.adapters(this) }
         schedule = ScheduleStore.load(this, defaults("BASELINE_REST_V2"))
+        startStudy?.let { study.start(it) }
         lifecycleScope.launch(Dispatchers.IO) {
             store.recoverInterrupted()
             sessionList = store.list()
@@ -123,6 +128,8 @@ class MainActivity : ComponentActivity() {
                         syncStatus = syncStatus, syncing = syncing,
                     ),
                     actions,
+                    study,
+                    startRoute,
                 )
             }
         }

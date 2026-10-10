@@ -1,0 +1,10 @@
+{
+  "protocol_id": "ATTENTION_DEMO",
+  "label": "DEMO",
+  "participant_id": "T001",
+  "duration_sec": 150,
+  "rate_hz": 50,
+  "keep_screen_on": true,
+  "sensors": ["ACC", "PPG", "HR_IBI", "EDA", "OFFBODY", "SYSTEM"],
+  "metadata": { "study": "ATTENTION_DEMO", "note": "short smoke test of the task software, not for analysis" }
+}

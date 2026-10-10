@@ -74,6 +74,31 @@ class SessionManager(private val context: Context, private val store: SessionSto
         if (_ui.value.state == SessionState.RUNNING) markQueue.add(Timebase.monotonicNs() to Timebase.utcNs())
     }
 
+    private class Live(val id: String, val startMono: Long)
+    @Volatile private var live: Live? = null
+
+    /** True while a session is writing; the study runner waits for this before showing the first stimulus. */
+    val recording: Boolean get() = live != null && _ui.value.state == SessionState.RUNNING
+
+    /** Appends an event (phase start/stop, EMA submit, ...) to the running session's events.jsonl on both clocks. */
+    fun logEvent(name: String, detail: String = "") {
+        val l = live ?: return
+        val m = Timebase.monotonicNs()
+        store.appendEvent(l.id, JSONObject().put("utc_ns", Timebase.monoToUtcNs(m)).put("monotonic_ns", m)
+            .put("session_offset_ns", m - l.startMono).put("event", name).put("detail", detail))
+    }
+
+    /** One row of task_events.csv; [monoNs] is the stimulus onset (or the answer time for EMA), on the sensors' clock. */
+    fun logTask(monoNs: Long, type: String, phase: String, trial: Int, stimulus: String, expected: String,
+                response: String, outcome: String, rtMs: Long?) {
+        val l = live ?: return
+        val f = File(store.dir(l.id), "task_events.csv")
+        synchronized(this) {
+            if (!f.exists()) f.writeText("event_type,phase,trial,stimulus,expected,response,outcome,rt_ms,utc_ns,monotonic_ns,session_offset_ns\n")
+            f.appendText("$type,$phase,$trial,$stimulus,$expected,$response,$outcome,${rtMs ?: ""},${Timebase.monoToUtcNs(monoNs)},$monoNs,${monoNs - l.startMono}\n")
+        }
+    }
+
     fun start(cfg: ScheduleConfig, adapters: List<SensorAdapter>) {
         if (active) return
         stopRequested = false
@@ -147,6 +172,7 @@ class SessionManager(private val context: Context, private val store: SessionSto
                 put("phone_gateway", "none (Phase 4)")
             }
             store.writeJson(File(dir, "metadata.json"), metadata)
+            live = Live(id, startMono)
             var windowsDone = 0
             fun event(name: String, detail: String = "", mono: Long = Timebase.monotonicNs(), utc: Long = Timebase.utcNs()) =
                 store.appendEvent(id, JSONObject().apply {
@@ -172,6 +198,11 @@ class SessionManager(private val context: Context, private val store: SessionSto
                         put("error", s.error ?: JSONObject.NULL)
                     })
                 })
+                File(dir, "task_events.csv").takeIf { it.exists() }?.let { f ->
+                    val (rows, sha) = CsvStreamWriter.scan(f)
+                    put("task_events", JSONObject().put("file", f.name).put("rows", rows).put("bytes", f.length())
+                        .put("sha256", if (final) sha else JSONObject.NULL))
+                }
                 put("errors", errors); put("export_status", "PENDING")
             }
 
@@ -325,6 +356,7 @@ class SessionManager(private val context: Context, private val store: SessionSto
                 store.appendEvent(id, JSONObject().put("utc_ns", Timebase.utcNs()).put("event", "session_error").put("detail", e.toString()))
             }
         } finally {
+            live = null
             runCatching { app.unregisterReceiver(receiver) }
             runCatching { InspectorService.cancelWindow(app) }
             InspectorService.stop()

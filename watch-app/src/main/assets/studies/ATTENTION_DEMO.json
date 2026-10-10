@@ -1,0 +1,10 @@
+{
+  "study_id": "ATTENTION_DEMO",
+  "session_protocol": "ATTENTION_DEMO",
+  "ema_items": ["focus", "stress"],
+  "phases": [
+    { "id": "REST_1", "type": "REST",   "sec": 8 },
+    { "id": "STROOP", "type": "STROOP", "sec": 20 },
+    { "id": "CPT",    "type": "CPT",    "sec": 20 }
+  ]
+}
